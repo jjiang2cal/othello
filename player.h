@@ -4,6 +4,9 @@
 #include <iostream>
 #include "common.h"
 #include "board.h"
+#include <vector>
+#include <stdlib.h>   /* srand, rand */
+#include <time.h>
 using namespace std;
 
 class Player {
@@ -11,6 +14,9 @@ class Player {
 private:
 	Side side;
     Side opponentSide;
+    Board * board;
+
+    vector<Move *> getMoves(Board * board, Side side);
 
 public:
     Player(Side side);
