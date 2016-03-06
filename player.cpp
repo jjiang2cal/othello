@@ -14,6 +14,9 @@ Player::Player(Side side) {
      * precalculating things, etc.) However, remember that you will only have
      * 30 seconds.
      */
+    // set player's side and opponent's side
+    this -> side = side;
+    this -> opponentSide = (side == BLACK) ? WHITE : BLACK;
 }
 
 /*
