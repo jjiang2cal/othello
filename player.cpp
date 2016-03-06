@@ -53,12 +53,25 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
 
     // do a random move
-    vector<Move *> moves;          // to store available moves
+    list<Move *> moves;        // to store available moves
     moves = this -> getMoves(this -> board, this -> side);
     if (moves.size() != 0)
     {
-        srand(time(NULL));
-        Move * move2 = moves[rand() % moves.size()];
+        int score = -10000;      // a very negative number to start with
+        Move * move2;
+        list<Move *>::iterator it;
+        for (it = moves.begin(); it != moves.end(); it++)
+        {
+            Move * move3 = *it;
+            Board * copyBoard = (this -> board) -> copy();
+            copyBoard -> doMove(move3, this -> side);
+            int tempScore = this -> evaluateBoard(copyBoard, this -> side);
+            if (tempScore > score)
+            {
+                move2 = move3;
+                score = tempScore;
+            }
+        }
         (this -> board) -> doMove(move2, this -> side);
         return move2;
     }
@@ -72,11 +85,11 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
  *
  * @param  board  this player's board
  *         side   this player's side
- * @return A vector containing available moves.
+ * @return A list containing available moves.
  */
-vector<Move *> Player::getMoves(Board * board, Side side)
+list<Move *> Player::getMoves(Board * board, Side side)
 {
-    vector<Move *> moves;
+    list<Move *> moves;
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
@@ -88,4 +101,41 @@ vector<Move *> Player::getMoves(Board * board, Side side)
         }
     }
     return moves;
+}
+
+int Player::evaluateBoard(Board * board, Side side)
+{
+    int score = 0;
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++) {
+            if (board -> get(side, i, j))
+            {
+                score += this -> evaluateDisk(i, j);
+                continue;
+            }
+            if (board -> get(this -> opponentSide, i, j))
+            {
+                score -= this -> evaluateDisk(i, j);
+            }
+        }
+    }
+    return score;
+}
+
+int Player::evaluateDisk(int i, int j)
+{
+    // reference: http://play-othello.appspot.com/files/Othello.pdf
+    int value[8][8] = {
+        {100, -20, 10, 5, 5, 10, -20, 100},
+        {-20, -50, -2, -2, -2, -2, -50, -20},
+        {10, -2, -1, -1, -1, -1, -2, 10},
+        {5, -2, -1, -1, -1, -1, -2, 5},
+        {5, -2, -1, -1, -1, -1, -2, 5},
+        {10, -2, -1, -1, -1, -1, -2, 10},
+        {-20, -50, -2, -2, -2, -2, -50, -20},
+        {100, -20, 10, 5, 5, 10, -20, 100}
+    };
+    
+    return value[i][j];
 }

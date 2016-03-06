@@ -4,7 +4,7 @@
 #include <iostream>
 #include "common.h"
 #include "board.h"
-#include <vector>
+#include <list>
 #include <stdlib.h>   /* srand, rand */
 #include <time.h>
 using namespace std;
@@ -16,7 +16,9 @@ private:
     Side opponentSide;
     Board * board;
 
-    vector<Move *> getMoves(Board * board, Side side);
+    list<Move *> getMoves(Board * board, Side side);
+    int evaluateBoard(Board * board, Side side);
+    int evaluateDisk(int i, int j);
 
 public:
     Player(Side side);
