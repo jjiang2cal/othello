@@ -52,23 +52,15 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         (this -> board) -> doMove(opponentsMove, this -> opponentSide);
     }
     /* 
-     * choose a move by heuristic function based on positional weights
-     * and mobility
+     * choose a move by heuristic function
      */
     // get available moves
     list<Move *> moves
         = this -> getMoves(this -> board, this -> side);
-    // get opponent's available moves
-    list<Move *> oppoMoves
-        = this -> getMoves(this -> board, this -> opponentSide);
+    
     // heuristic function score; start with a very negative number
     int score = -1000000;
-    // Ending state. Give it more weight.
-    if (moves.size() == 0 && oppoMoves.size() == 0)
-    {
-        score = (this -> board -> count(this -> side) - 
-            this -> board -> count(this -> opponentSide)) * 10000;
-    }
+    
     if (moves.size() != 0)
     {
         Move * move2;
@@ -80,27 +72,9 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
             // simulate move on a copied board
             Board * copyBoard = (this -> board) -> copy();
             copyBoard -> doMove(move3, this -> side);
-            // get opponent's current possible moves
-            oppoMoves = this -> getMoves(copyBoard, this -> opponentSide);
-            // get a score based on mobility difference
-            int mobility = 10 * (moves.size() - oppoMoves.size()) /
-                (moves.size() + oppoMoves.size());
-            // get a score based on positional weights
-            int position = this -> evaluateBoard(copyBoard, this -> side);
-            // get a score based on difference of numbers of disks
-            int myDisks = copyBoard -> count(this -> side);
-            int oppoDisks = copyBoard -> count(this -> opponentSide);
-            int parity = (myDisks - oppoDisks) * 10;
-            // temp score after move3
-            int tempScore;
-            if (myDisks + oppoDisks < 54)
-            {
-                tempScore = position + mobility;
-            }
-            else
-            {
-                tempScore = position + mobility + parity;
-            }
+            // get heuristic function score
+            int tempScore = this -> evaluateBoard(copyBoard, this -> side);
+            
             // store the higher score and corresponding move
             if (tempScore > score)
             {
@@ -113,7 +87,6 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         return move2;
     }
     // if no move available, pass
-    cout << "PASS" << endl;
     return NULL;
 }
 
@@ -144,13 +117,49 @@ list<Move *> Player::getMoves(Board * board, Side side)
 
 /**
  * @brief A private helper function which evaluates the 
+ *        heuristic function.
+ *
+ * @param  board  board to be evaluated
+ *         side   side
+ * @return A value of the heuristic function.
+ */
+int Player::evaluateBoard(Board * board, Side side)
+{
+    
+    int score = 0;
+    Side oppoSide = (side == BLACK) ? WHITE : BLACK;
+    
+    // get a score based on positional weights
+    int position = this -> evaluatePosition(board, side);
+
+    // get a score based on difference of numbers of disks
+    int myDisks = board -> count(side);
+    int oppoDisks = board -> count(oppoSide);
+    int parity = myDisks - oppoDisks;
+
+    // use positional weights and mobility for early and middle stages
+    // add disk difference in late stage
+    if (myDisks + oppoDisks < 54)
+    {
+        score = position;
+    }
+    else
+    {
+        score = position + parity;
+    }
+    
+    return score;
+}
+
+/**
+ * @brief A private helper function which evaluates the 
  *        positional weights of the heuristic function.
  *
  * @param  board  this player's board
  *         side   this player's side
  * @return A value of the heuristic function.
  */
-int Player::evaluateBoard(Board * board, Side side)
+int Player::evaluatePosition(Board * board, Side side)
 {
     int score = 0;
     for (int i = 0; i < 8; i++)

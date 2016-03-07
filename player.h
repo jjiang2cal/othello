@@ -18,6 +18,7 @@ private:
 
     list<Move *> getMoves(Board * board, Side side);
     int evaluateBoard(Board * board, Side side);
+    int evaluatePosition(Board * board, Side side);
     int evaluateDisk(int i, int j);
 
 public:
