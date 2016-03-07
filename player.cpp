@@ -85,9 +85,22 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
             // get a score based on mobility difference
             int mobility = 10 * (moves.size() - oppoMoves.size()) /
                 (moves.size() + oppoMoves.size());
+            // get a score based on positional weights
+            int position = this -> evaluateBoard(copyBoard, this -> side);
+            // get a score based on difference of numbers of disks
+            int myDisks = copyBoard -> count(this -> side);
+            int oppoDisks = copyBoard -> count(this -> opponentSide);
+            int parity = (myDisks - oppoDisks) * 10;
             // temp score after move3
-            int tempScore = this -> evaluateBoard(copyBoard, this -> side)
-                + mobility;
+            int tempScore;
+            if (myDisks + oppoDisks < 54)
+            {
+                tempScore = position + mobility;
+            }
+            else
+            {
+                tempScore = position + mobility + parity;
+            }
             // store the higher score and corresponding move
             if (tempScore > score)
             {
