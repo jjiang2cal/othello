@@ -51,27 +51,51 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     {
         (this -> board) -> doMove(opponentsMove, this -> opponentSide);
     }
-
-    // do a random move
-    list<Move *> moves;        // to store available moves
-    moves = this -> getMoves(this -> board, this -> side);
+    /* 
+     * choose a move by heuristic function based on positional weights
+     * and mobility
+     */
+    // get available moves
+    list<Move *> moves
+        = this -> getMoves(this -> board, this -> side);
+    // get opponent's available moves
+    list<Move *> oppoMoves
+        = this -> getMoves(this -> board, this -> opponentSide);
+    // heuristic function score; start with a very negative number
+    int score = -1000000;
+    // Ending state. Give it more weight.
+    if (moves.size() == 0 && oppoMoves.size() == 0)
+    {
+        score = (this -> board -> count(this -> side) - 
+            this -> board -> count(this -> opponentSide)) * 10000;
+    }
     if (moves.size() != 0)
     {
-        int score = -10000;      // a very negative number to start with
         Move * move2;
         list<Move *>::iterator it;
+        // check each possible move
         for (it = moves.begin(); it != moves.end(); it++)
         {
             Move * move3 = *it;
+            // simulate move on a copied board
             Board * copyBoard = (this -> board) -> copy();
             copyBoard -> doMove(move3, this -> side);
-            int tempScore = this -> evaluateBoard(copyBoard, this -> side);
+            // get opponent's current possible moves
+            oppoMoves = this -> getMoves(copyBoard, this -> opponentSide);
+            // get a score based on mobility difference
+            int mobility = 10 * (moves.size() - oppoMoves.size()) /
+                (moves.size() + oppoMoves.size());
+            // temp score after move3
+            int tempScore = this -> evaluateBoard(copyBoard, this -> side)
+                + mobility;
+            // store the higher score and corresponding move
             if (tempScore > score)
             {
                 move2 = move3;
                 score = tempScore;
             }
         }
+        // do move which will lead to the highest score at this level
         (this -> board) -> doMove(move2, this -> side);
         return move2;
     }
@@ -95,14 +119,24 @@ list<Move *> Player::getMoves(Board * board, Side side)
         for (int j = 0; j < 8; j++)
         {
             Move * move = new Move(i, j);
+            // check whether move is legal
             if (!board -> checkMove(move, side))
                 continue;
+            // add the legal move to the list
             moves.push_back(move);
         }
     }
     return moves;
 }
 
+/**
+ * @brief A private helper function which evaluates the 
+ *        positional weights of the heuristic function.
+ *
+ * @param  board  this player's board
+ *         side   this player's side
+ * @return A value of the heuristic function.
+ */
 int Player::evaluateBoard(Board * board, Side side)
 {
     int score = 0;
@@ -123,6 +157,15 @@ int Player::evaluateBoard(Board * board, Side side)
     return score;
 }
 
+/**
+ * @brief A private helper function which evaluates the positional weight.
+ *
+ * reference: http://play-othello.appspot.com/files/Othello.pdf
+ *
+ * @param  i      the row number of the board
+ *         j      the colomn number of the board
+ * @return A value of the positional weight.
+ */
 int Player::evaluateDisk(int i, int j)
 {
     // reference: http://play-othello.appspot.com/files/Othello.pdf
