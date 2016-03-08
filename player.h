@@ -20,6 +20,8 @@ private:
     int evaluateBoard(Board * board, Side side);
     int evaluatePosition(Board * board, Side side);
     int evaluateDisk(int i, int j);
+    int min(Board * board, int depth);
+    int max(Board * board, int depth);
 
 public:
     Player(Side side);
@@ -29,6 +31,8 @@ public:
 
     // Flag to tell if the player is running within the test_minimax context
     bool testingMinimax;
+    // Set player's board. Used in testminimax.
+    void setPlayerBoard(char data[]) { this -> board -> setBoard(data); };
 };
 
 #endif

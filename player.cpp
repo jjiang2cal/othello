@@ -51,43 +51,134 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     {
         (this -> board) -> doMove(opponentsMove, this -> opponentSide);
     }
-    /* 
-     * choose a move by heuristic function
-     */
+
+    /* minimax */
+    int maxDepth = 2;
     // get available moves
     list<Move *> moves
         = this -> getMoves(this -> board, this -> side);
-    
+    if (moves.size() == 0)
+        return NULL;
+
     // heuristic function score; start with a very negative number
     int score = -1000000;
-    
-    if (moves.size() != 0)
+    Move * move2 = NULL;
+    list<Move *>::iterator it;
+    // check each possible move
+    for (it = moves.begin(); it != moves.end(); it++)
     {
-        Move * move2;
-        list<Move *>::iterator it;
-        // check each possible move
-        for (it = moves.begin(); it != moves.end(); it++)
-        {
-            Move * move3 = *it;
-            // simulate move on a copied board
-            Board * copyBoard = (this -> board) -> copy();
-            copyBoard -> doMove(move3, this -> side);
-            // get heuristic function score
-            int tempScore = this -> evaluateBoard(copyBoard, this -> side);
+        Move * move3 = *it;
+        // simulate move on a copied board
+        Board * copyBoard = (this -> board) -> copy();
+        copyBoard -> doMove(move3, this -> side);
+        // get heuristic function score; opponent wants to minimize our score
+        int tempScore;
+        tempScore = this -> min(copyBoard, maxDepth);
             
-            // store the higher score and corresponding move
-            if (tempScore > score)
-            {
-                move2 = move3;
-                score = tempScore;
-            }
+        // maximize score on the minimal scores
+        if (tempScore > score)
+        {
+            move2 = move3;
+            score = tempScore;
         }
-        // do move which will lead to the highest score at this level
+    }
+
+    if (move2 != NULL)
+    {
         (this -> board) -> doMove(move2, this -> side);
         return move2;
     }
-    // if no move available, pass
     return NULL;
+}
+
+/**
+ * @brief Min part of the minimax algorithm. Opponent's turn to play.
+ *        Opponent wants to minimize our score.
+ * @param board Board state before opponent chooses a move.
+ *        depth Remaining depth to explore.
+ * @return The minimal score of ours, because opponent will choose his best
+ *         move to minimize our score.
+ */
+int Player::min(Board * board, int depth)
+{
+    int score;
+    Side side = this -> opponentSide;  // opponent's turn
+    list<Move *> moves = this -> getMoves(board, side);
+    if (depth == 0 || moves.size() == 0)
+    {
+        score = this -> evaluateBoard(board, this -> side);
+        return score;
+    }
+    // Opponent passes. Now our turn. Maximize our score.
+    if (moves.size() == 0)
+    {
+        return max(board, depth - 1);
+    }
+    score = 1000000;      // start with a very large number.
+    list<Move *>::iterator it;
+    // check each possible move
+    for (it = moves.begin(); it != moves.end(); it++)
+    {
+        Move * move3 = *it;
+        // simulate move on a copied board
+        Board * copyBoard = board -> copy();
+        copyBoard -> doMove(move3, side);
+        // Our turn. Maximize our score.
+        int tempScore = max(copyBoard, depth - 1);
+        // Opponent chooses the best step for him which minimizes our score.
+        // store the min score
+        if (tempScore < score)
+        {
+            score = tempScore;
+        }
+    }
+    return score;
+}
+
+/**
+ * @brief Max part of the minimax algorithm. Our turn to play.
+ *        We want to maximize our score.
+ * @param board Board state before we choose a move.
+ *        depth Remaining depth to explore.
+ * @return The maximal score of ours, because we will choose our best
+ *         move to maximize our score based on the minimal scores from
+ *         opponent's previous move.
+ */
+int Player::max(Board * board, int depth)
+{
+    int score;
+    Side side = this -> side;   // our turn
+    list<Move *> moves = this -> getMoves(board, side);
+    if (depth == 0 || moves.size() == 0)
+    {
+        score = this -> evaluateBoard(board, this -> side);
+        return score;
+    }
+    // No available move for us. We pass. Now opponent's turn.
+    if (moves.size() == 0)
+    {
+        // opponent always wants to minimize our score;
+        return min(board, depth - 1);
+    }
+    score = -1000000;     // start with a very negative number
+    list<Move *>::iterator it;
+    // check each possible move
+    for (it = moves.begin(); it != moves.end(); it++)
+    {
+        Move * move3 = *it;
+        // simulate move on a copied board
+        Board * copyBoard = board -> copy();
+        copyBoard -> doMove(move3, side);
+        // get minimal score from opponent's move
+        int tempScore = min(copyBoard, depth - 1);
+            
+        // Maximize our score based on the minimal scores
+        if (tempScore > score)
+        {
+            score = tempScore;
+        }
+    }
+    return score;
 }
 
 /**
@@ -105,11 +196,17 @@ list<Move *> Player::getMoves(Board * board, Side side)
         for (int j = 0; j < 8; j++)
         {
             Move * move = new Move(i, j);
+            /*
             // check whether move is legal
             if (!board -> checkMove(move, side))
                 continue;
             // add the legal move to the list
             moves.push_back(move);
+            */
+            if (board -> checkMove(move, side))
+            {
+                moves.push_back(move);
+            }
         }
     }
     return moves;
@@ -125,19 +222,18 @@ list<Move *> Player::getMoves(Board * board, Side side)
  */
 int Player::evaluateBoard(Board * board, Side side)
 {
-    
     int score = 0;
     Side oppoSide = (side == BLACK) ? WHITE : BLACK;
     
     // get a score based on positional weights
     int position = this -> evaluatePosition(board, side);
-
+    
     // get a score based on difference of numbers of disks
     int myDisks = board -> count(side);
     int oppoDisks = board -> count(oppoSide);
     int parity = myDisks - oppoDisks;
 
-    // use positional weights and mobility for early and middle stages
+    // use positional weights for early and middle stages
     // add disk difference in late stage
     if (myDisks + oppoDisks < 54)
     {
@@ -149,6 +245,8 @@ int Player::evaluateBoard(Board * board, Side side)
     }
     
     return score;
+
+    // return parity;   // to test minimax, un-comment this line.
 }
 
 /**
