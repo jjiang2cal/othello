@@ -53,7 +53,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
 
     /* minimax */
-    int maxDepth = 2;
+    int maxDepth = 4;
     // get available moves
     list<Move *> moves
         = this -> getMoves(this -> board, this -> side);
@@ -61,7 +61,9 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         return NULL;
 
     // heuristic function score; start with a very negative number
-    int score = -1000000;
+    int score = -INFINITY;
+    int alpha = -INFINITY;
+    int beta = INFINITY;
     Move * move2 = NULL;
     list<Move *>::iterator it;
     // check each possible move
@@ -73,13 +75,19 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         copyBoard -> doMove(move3, this -> side);
         // get heuristic function score; opponent wants to minimize our score
         int tempScore;
-        tempScore = this -> min(copyBoard, maxDepth);
+        tempScore = this -> min(copyBoard, maxDepth, alpha, beta);
             
         // maximize score on the minimal scores
         if (tempScore > score)
         {
             move2 = move3;
             score = tempScore;
+        }
+
+        alpha = (alpha > score) ? alpha : score;
+        if (beta <= alpha)
+        {
+            continue;
         }
     }
 
@@ -99,9 +107,11 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
  * @return The minimal score of ours, because opponent will choose his best
  *         move to minimize our score.
  */
-int Player::min(Board * board, int depth)
+int Player::min(Board * board, int depth, int a, int b)
 {
     int score;
+    int alpha = a;
+    int beta = b;
     Side side = this -> opponentSide;  // opponent's turn
     list<Move *> moves = this -> getMoves(board, side);
     if (depth == 0 || moves.size() == 0)
@@ -112,9 +122,9 @@ int Player::min(Board * board, int depth)
     // Opponent passes. Now our turn. Maximize our score.
     if (moves.size() == 0)
     {
-        return max(board, depth - 1);
+        return max(board, depth - 1, alpha, beta);
     }
-    score = 1000000;      // start with a very large number.
+    score = INFINITY;      // start with a very large number.
     list<Move *>::iterator it;
     // check each possible move
     for (it = moves.begin(); it != moves.end(); it++)
@@ -124,12 +134,17 @@ int Player::min(Board * board, int depth)
         Board * copyBoard = board -> copy();
         copyBoard -> doMove(move3, side);
         // Our turn. Maximize our score.
-        int tempScore = max(copyBoard, depth - 1);
+        int tempScore = max(copyBoard, depth - 1, alpha, beta);
         // Opponent chooses the best step for him which minimizes our score.
         // store the min score
         if (tempScore < score)
         {
             score = tempScore;
+        }
+        beta = (beta < score) ? (beta) : score;
+        if (beta <= alpha)
+        {
+            break;
         }
     }
     return score;
@@ -144,9 +159,11 @@ int Player::min(Board * board, int depth)
  *         move to maximize our score based on the minimal scores from
  *         opponent's previous move.
  */
-int Player::max(Board * board, int depth)
+int Player::max(Board * board, int depth, int a, int b)
 {
     int score;
+    int alpha = a;
+    int beta = b;
     Side side = this -> side;   // our turn
     list<Move *> moves = this -> getMoves(board, side);
     if (depth == 0 || moves.size() == 0)
@@ -158,9 +175,9 @@ int Player::max(Board * board, int depth)
     if (moves.size() == 0)
     {
         // opponent always wants to minimize our score;
-        return min(board, depth - 1);
+        return min(board, depth - 1, alpha, beta);
     }
-    score = -1000000;     // start with a very negative number
+    score = -INFINITY;     // start with a very negative number
     list<Move *>::iterator it;
     // check each possible move
     for (it = moves.begin(); it != moves.end(); it++)
@@ -170,12 +187,17 @@ int Player::max(Board * board, int depth)
         Board * copyBoard = board -> copy();
         copyBoard -> doMove(move3, side);
         // get minimal score from opponent's move
-        int tempScore = min(copyBoard, depth - 1);
+        int tempScore = min(copyBoard, depth - 1, alpha, beta);
             
         // Maximize our score based on the minimal scores
         if (tempScore > score)
         {
             score = tempScore;
+        }
+        alpha = (alpha > score) ? alpha : score;
+        if (alpha >= beta)
+        {
+            break;
         }
     }
     return score;

@@ -7,6 +7,9 @@
 #include <list>
 #include <stdlib.h>   /* srand, rand */
 #include <time.h>
+
+#define INFINITY     1000000;
+
 using namespace std;
 
 class Player {
@@ -20,8 +23,8 @@ private:
     int evaluateBoard(Board * board, Side side);
     int evaluatePosition(Board * board, Side side);
     int evaluateDisk(int i, int j);
-    int min(Board * board, int depth);
-    int max(Board * board, int depth);
+    int min(Board * board, int depth, int alpha, int beta);
+    int max(Board * board, int depth, int alpha, int beta);
 
 public:
     Player(Side side);
