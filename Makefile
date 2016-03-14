@@ -1,5 +1,5 @@
 CC          = g++
-CFLAGS      = -Wall -ansi -pedantic -ggdb -O2
+CFLAGS      = -Wall -ansi -pedantic -ggdb -O3 -std=c++11
 OBJS        = player.o board.o
 PLAYERNAME  = go
 

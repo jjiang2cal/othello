@@ -20,12 +20,14 @@ Player::Player(Side side) {
 
     // set up a board
     this -> board = new Board;
+    
 }
 
 /*
  * Destructor for the player.
  */
 Player::~Player() {
+    this -> trans.clear();
     delete board;
 }
 
@@ -119,6 +121,28 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
     return NULL;
 }
+/*
+int Player::mtdf(Board * board, int firstGuess, int depth)
+{
+    int g, lowerBound, upperBound, beta;
+    g = firstGuess;
+    upperBound = INFINITY;
+    lowerBound = - INFINITY;
+    while (lowerBound < upperBound)
+    {
+        if (g == lowerBound)
+	    beta = g + 1;
+	else
+	    beta = g;
+	g = alphaBeta(board, depth, beta - 1, beta);
+	if (g < beta)
+	    upperBound = g;
+	else
+	    lowerBound = g;
+    }
+    return g;
+}
+*/
 
 /**
  * @brief  Minimax algorithm.
@@ -220,8 +244,18 @@ int Player::min(Board * board, int depth, int a, int b)
         // simulate move on a copied board
         Board * copyBoard = board -> copy();
         copyBoard -> doMove(move3, side);
+	long hashValue = zobristHash(copyBoard, depth);
+	if (this -> trans.find(hashValue) != this -> trans.end())
+	{
+	    return this -> trans[hashValue];
+	}
         // Our turn. Maximize our score.
         int tempScore = max(copyBoard, depth - 1, alpha, beta);
+	if (this -> trans.size() >= 100000)
+	{
+	    this -> trans.erase(trans.begin());
+	}
+	this -> trans[hashValue] = tempScore;
         // Opponent chooses the best step for him which minimizes our score.
         // store the min score
         if (tempScore < score)
@@ -282,6 +316,11 @@ int Player::max(Board * board, int depth, int a, int b)
         // simulate move on a copied board
         Board * copyBoard = board -> copy();
         copyBoard -> doMove(move3, side);
+	long hashValue = zobristHash(copyBoard, depth);
+	if (this -> trans.find(hashValue) != this -> trans.end())
+	{
+	    return this -> trans[hashValue];
+	}
         // get minimal score from opponent's move
         int tempScore = min(copyBoard, depth - 1, alpha, beta);
             
@@ -425,4 +464,47 @@ int Player::evaluateDisk(int i, int j)
     };
     
     return value[i][j];
+}
+/**
+ * @brief Zobrist Hashing for a given board state and depth. It takes the depth for consideration, 
+ * so that if it is the same board but calculated at a different depth (i.e., a shallower depth)
+ * the transposition table does not contain the score and the score at this depth needs to be
+ * re-calculated in the minimax algorithm with alpha-beta pruning.
+ * @param board Give board state.
+ * @param depth The depth the node has explored.
+ * @return The hash value.
+ */
+long Player::zobristHash(Board * board, int depth)
+{
+    srand(1);
+    long ** table = new long * [64];
+    for (int i = 0; i < 64; i++)
+    {
+        table[i] = new long[2];
+    }
+    for (int i = 0; i < 64; i++)
+    {
+        for (int j = 0; j < 2; j++)
+	{
+	    table[i][j] = rand();
+	}
+    }
+    long hashValue = 0;
+    for (int x = 0; x < 8; x++)
+    {
+        for (int y = 0; y < 8; y++)
+	{
+	    int i = 8 * x + y;
+	    if (board -> occupied(x, y))
+	    {
+	        int j = (board -> get(WHITE, x, y)) ? 0 : 1;
+		hashValue = (hashValue + depth) ^ (table[i][j] + depth);
+	    }
+	}
+    }
+    
+    for (int i = 0; i < 64; i++)
+        delete [] table[i];
+    delete [] table;
+    return hashValue;
 }
