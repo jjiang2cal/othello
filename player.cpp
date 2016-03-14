@@ -54,32 +54,37 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 
     if (msLeft <= 1)
         return NULL;
-    
+    /*
     clock_t start = clock();
     double time_alloc;         // time allocated for search for this move
-    
+    */
     int maxDepth;
-    int diskCount = this -> board -> countBlack() + this -> board -> countWhite();
+    // int diskCount = this -> board -> countBlack() + this -> board -> countWhite();
+    // cerr << "diskCount = " << diskCount << endl;
+    /*
     if (diskCount < 21)
     {
-        time_alloc = (msLeft / 1000 - 860.) / 8.;    // 10s for beginning stage approx.
+        // time_alloc = (msLeft / 1000 - 860.) / 8.;    // 10s for beginning stage approx.
         maxDepth = 6;
     }
     else if (diskCount < 55)
     {
-        time_alloc = (msLeft / 1000 - 350.) / 17.;    // 30s for middle stage approx.
+        // time_alloc = (msLeft / 1000 - 350.) / 17.;    // 30s for middle stage approx.
         maxDepth = 8;
     }
     else
     {
-        time_alloc = msLeft /1000 / 5.;    // 60s for endding stage approx.
+        // time_alloc = msLeft /1000 / 5.;    // 60s for endding stage approx.
         maxDepth = 8;
     }
+    */
+    maxDepth = 6;
     /*
     cerr << "time_alloc = " << time_alloc << endl;
     cerr << "maxDepth = " << maxDepth << endl;
     */
     Move * move = NULL;
+    /*
     if (diskCount >= 56)
     {
         move = (testingMinimax) ? (this -> minimax(2)) : 
@@ -87,22 +92,26 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
     else if (diskCount > 20)
     {
-        while ( (double)(clock() - start) / (CLOCKS_PER_SEC) * 2 < time_alloc)
-        {
+        // while ( (double)(clock() - start) / (CLOCKS_PER_SEC) * 2 < time_alloc)
+        // {
+           
             cerr << "Passed: " << (double)(clock() - start) / (CLOCKS_PER_SEC) 
                 << " seconds" << endl;
             cerr << "Now maxDepth = " << maxDepth << endl;
+	    
             move = (testingMinimax) ? (this -> minimax(2)) : 
                 (this -> minimax(maxDepth));
-            maxDepth ++;
-        }
+            // maxDepth ++;
+        // }
     }
     else
     {
         move = (testingMinimax) ? (this -> minimax(2)) : 
             (this -> minimax(maxDepth));
     }
-    
+    */
+    move = (testingMinimax) ? (this -> minimax(2)) : 
+                (this -> minimax(maxDepth));
     if (move != NULL)
     {
         (this -> board) -> doMove(move, this -> side);
@@ -118,6 +127,8 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
  */
 Move * Player::minimax(int maxDepth)
 {
+    // int diskCount = this -> board -> countBlack() + this -> board -> countWhite();
+    // cerr << "In minimax, diskCount = " << diskCount << endl;
     // cerr << maxDepth << endl;
     /* minimax */
     // get available moves
@@ -156,6 +167,17 @@ Move * Player::minimax(int maxDepth)
             continue;
         }
         
+        delete copyBoard;
+        
+    }
+    
+    for (it = moves.begin(); it != moves.end(); it++)
+    {
+        Move * move3 = *it;
+	if (move3 != move2)
+	{
+	    delete move3;
+	}
     }
 
     return move2;
@@ -171,6 +193,9 @@ Move * Player::minimax(int maxDepth)
  */
 int Player::min(Board * board, int depth, int a, int b)
 {
+    // int diskCount = this -> board -> countBlack() + this -> board -> countWhite();
+    // cerr << "In min, diskCount = " << diskCount << endl;
+    // cerr << "In min, depth = " << depth << endl;
     int score;
     int alpha = a;
     int beta = b;
@@ -204,10 +229,16 @@ int Player::min(Board * board, int depth, int a, int b)
             score = tempScore;
         }
         beta = (beta < score) ? (beta) : score;
+	delete copyBoard;
         if (beta <= alpha)
         {
             break;
         }
+    }
+    for (it = moves.begin(); it != moves.end(); it++)
+    {
+        Move * move3 = *it;
+	delete move3;
     }
     return score;
 }
@@ -223,6 +254,9 @@ int Player::min(Board * board, int depth, int a, int b)
  */
 int Player::max(Board * board, int depth, int a, int b)
 {
+    // int diskCount = this -> board -> countBlack() + this -> board -> countWhite();
+    // cerr << "In max, diskCount = " << diskCount << endl;
+    // cerr << "In max, depth = " << depth << endl;
     int score;
     int alpha = a;
     int beta = b;
@@ -257,10 +291,16 @@ int Player::max(Board * board, int depth, int a, int b)
             score = tempScore;
         }
         alpha = (alpha > score) ? alpha : score;
+	delete copyBoard;
         if (alpha >= beta)
         {
             break;
         }
+    }
+    for (it = moves.begin(); it != moves.end(); it++)
+    {
+        Move * move3 = *it;
+	delete move3;
     }
     return score;
 }
@@ -287,6 +327,10 @@ list<Move *> Player::getMoves(Board * board, Side side)
             {
                 moves.push_back(move);
             }
+            else
+	    {
+	        delete move;
+	    }
         }
     }
     return moves;
