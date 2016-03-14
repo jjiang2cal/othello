@@ -52,8 +52,74 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         (this -> board) -> doMove(opponentsMove, this -> opponentSide);
     }
 
+    if (msLeft <= 1)
+        return NULL;
+    
+    clock_t start = clock();
+    double time_alloc;         // time allocated for search for this move
+    
+    int maxDepth;
+    int diskCount = this -> board -> countBlack() + this -> board -> countWhite();
+    if (diskCount < 21)
+    {
+        time_alloc = (msLeft / 1000 - 860.) / 8.;    // 10s for beginning stage approx.
+        maxDepth = 6;
+    }
+    else if (diskCount < 55)
+    {
+        time_alloc = (msLeft / 1000 - 350.) / 17.;    // 30s for middle stage approx.
+        maxDepth = 8;
+    }
+    else
+    {
+        time_alloc = msLeft /1000 / 5.;    // 60s for endding stage approx.
+        maxDepth = 8;
+    }
+    /*
+    cerr << "time_alloc = " << time_alloc << endl;
+    cerr << "maxDepth = " << maxDepth << endl;
+    */
+    Move * move = NULL;
+    if (diskCount >= 56)
+    {
+        move = (testingMinimax) ? (this -> minimax(2)) : 
+                (this -> minimax(64 - diskCount));
+    }
+    else if (diskCount > 20)
+    {
+        while ( (double)(clock() - start) / (CLOCKS_PER_SEC) * 2 < time_alloc)
+        {
+            cerr << "Passed: " << (double)(clock() - start) / (CLOCKS_PER_SEC) 
+                << " seconds" << endl;
+            cerr << "Now maxDepth = " << maxDepth << endl;
+            move = (testingMinimax) ? (this -> minimax(2)) : 
+                (this -> minimax(maxDepth));
+            maxDepth ++;
+        }
+    }
+    else
+    {
+        move = (testingMinimax) ? (this -> minimax(2)) : 
+            (this -> minimax(maxDepth));
+    }
+    
+    if (move != NULL)
+    {
+        (this -> board) -> doMove(move, this -> side);
+        return move;
+    }
+    return NULL;
+}
+
+/**
+ * @brief  Minimax algorithm.
+ * @param  maxDepth Depth to explore.
+ * @return The best move calculated by minimax algorithmß.
+ */
+Move * Player::minimax(int maxDepth)
+{
+    // cerr << maxDepth << endl;
     /* minimax */
-    int maxDepth = 4;
     // get available moves
     list<Move *> moves
         = this -> getMoves(this -> board, this -> side);
@@ -83,20 +149,16 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
             move2 = move3;
             score = tempScore;
         }
-
+        
         alpha = (alpha > score) ? alpha : score;
         if (beta <= alpha)
         {
             continue;
         }
+        
     }
 
-    if (move2 != NULL)
-    {
-        (this -> board) -> doMove(move2, this -> side);
-        return move2;
-    }
-    return NULL;
+    return move2;
 }
 
 /**
@@ -218,13 +280,9 @@ list<Move *> Player::getMoves(Board * board, Side side)
         for (int j = 0; j < 8; j++)
         {
             Move * move = new Move(i, j);
-            /*
+
             // check whether move is legal
-            if (!board -> checkMove(move, side))
-                continue;
             // add the legal move to the list
-            moves.push_back(move);
-            */
             if (board -> checkMove(move, side))
             {
                 moves.push_back(move);
@@ -263,7 +321,7 @@ int Player::evaluateBoard(Board * board, Side side)
     }
     else
     {
-        score = position + parity;
+        score = position + parity * 100;
     }
     
     return score;

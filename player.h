@@ -5,8 +5,7 @@
 #include "common.h"
 #include "board.h"
 #include <list>
-#include <stdlib.h>   /* srand, rand */
-#include <time.h>
+#include <time.h>    /* clock_t, clock, CLOCKS_PER_SEC */
 
 #define INFINITY     1000000;
 
@@ -23,6 +22,7 @@ private:
     int evaluateBoard(Board * board, Side side);
     int evaluatePosition(Board * board, Side side);
     int evaluateDisk(int i, int j);
+    Move * minimax(int maxDepth);
     int min(Board * board, int depth, int alpha, int beta);
     int max(Board * board, int depth, int alpha, int beta);
 
