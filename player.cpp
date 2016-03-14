@@ -27,7 +27,7 @@ Player::Player(Side side) {
  * Destructor for the player.
  */
 Player::~Player() {
-    this -> trans.clear();
+    // this -> trans.clear();
     delete board;
 }
 
@@ -60,32 +60,33 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     clock_t start = clock();
     double time_alloc;         // time allocated for search for this move
     */
+    Move * move = NULL;
     int maxDepth;
-    // int diskCount = this -> board -> countBlack() + this -> board -> countWhite();
-    // cerr << "diskCount = " << diskCount << endl;
     /*
+    int diskCount = this -> board -> countBlack() + this -> board -> countWhite();
+    // cerr << "diskCount = " << diskCount << endl;
+    
     if (diskCount < 21)
     {
-        // time_alloc = (msLeft / 1000 - 860.) / 8.;    // 10s for beginning stage approx.
+        time_alloc = (msLeft / 1000 - 860.) / 8.;    // 10s for beginning stage approx.
         maxDepth = 6;
     }
     else if (diskCount < 55)
     {
-        // time_alloc = (msLeft / 1000 - 350.) / 17.;    // 30s for middle stage approx.
+        time_alloc = (msLeft / 1000 - 350.) / 17.;    // 30s for middle stage approx.
         maxDepth = 8;
     }
     else
     {
-        // time_alloc = msLeft /1000 / 5.;    // 60s for endding stage approx.
+        time_alloc = msLeft /1000 / 5.;    // 60s for endding stage approx.
         maxDepth = 8;
     }
     */
-    maxDepth = 6;
+    
     /*
     cerr << "time_alloc = " << time_alloc << endl;
     cerr << "maxDepth = " << maxDepth << endl;
     */
-    Move * move = NULL;
     /*
     if (diskCount >= 56)
     {
@@ -94,8 +95,8 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
     else if (diskCount > 20)
     {
-        // while ( (double)(clock() - start) / (CLOCKS_PER_SEC) * 2 < time_alloc)
-        // {
+        while ( (double)(clock() - start) / (CLOCKS_PER_SEC) * 2 < time_alloc)
+        {
            
             cerr << "Passed: " << (double)(clock() - start) / (CLOCKS_PER_SEC) 
                 << " seconds" << endl;
@@ -103,8 +104,8 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	    
             move = (testingMinimax) ? (this -> minimax(2)) : 
                 (this -> minimax(maxDepth));
-            // maxDepth ++;
-        // }
+            maxDepth ++;
+        }
     }
     else
     {
@@ -112,8 +113,12 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
             (this -> minimax(maxDepth));
     }
     */
+    
+    // fixed maxDepth
+    maxDepth = 6;
     move = (testingMinimax) ? (this -> minimax(2)) : 
                 (this -> minimax(maxDepth));
+    
     if (move != NULL)
     {
         (this -> board) -> doMove(move, this -> side);
@@ -121,28 +126,6 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
     return NULL;
 }
-/*
-int Player::mtdf(Board * board, int firstGuess, int depth)
-{
-    int g, lowerBound, upperBound, beta;
-    g = firstGuess;
-    upperBound = INFINITY;
-    lowerBound = - INFINITY;
-    while (lowerBound < upperBound)
-    {
-        if (g == lowerBound)
-	    beta = g + 1;
-	else
-	    beta = g;
-	g = alphaBeta(board, depth, beta - 1, beta);
-	if (g < beta)
-	    upperBound = g;
-	else
-	    lowerBound = g;
-    }
-    return g;
-}
-*/
 
 /**
  * @brief  Minimax algorithm.
@@ -151,9 +134,6 @@ int Player::mtdf(Board * board, int firstGuess, int depth)
  */
 Move * Player::minimax(int maxDepth)
 {
-    // int diskCount = this -> board -> countBlack() + this -> board -> countWhite();
-    // cerr << "In minimax, diskCount = " << diskCount << endl;
-    // cerr << maxDepth << endl;
     /* minimax */
     // get available moves
     list<Move *> moves
@@ -217,9 +197,6 @@ Move * Player::minimax(int maxDepth)
  */
 int Player::min(Board * board, int depth, int a, int b)
 {
-    // int diskCount = this -> board -> countBlack() + this -> board -> countWhite();
-    // cerr << "In min, diskCount = " << diskCount << endl;
-    // cerr << "In min, depth = " << depth << endl;
     int score;
     int alpha = a;
     int beta = b;
@@ -244,18 +221,25 @@ int Player::min(Board * board, int depth, int a, int b)
         // simulate move on a copied board
         Board * copyBoard = board -> copy();
         copyBoard -> doMove(move3, side);
+	/*
+	// if the board with the depth has been calculated
 	long hashValue = zobristHash(copyBoard, depth);
 	if (this -> trans.find(hashValue) != this -> trans.end())
 	{
 	    return this -> trans[hashValue];
 	}
+	*/
         // Our turn. Maximize our score.
         int tempScore = max(copyBoard, depth - 1, alpha, beta);
+	/*
+	// if the transposition table exceeds size, erase the beginning one
 	if (this -> trans.size() >= 100000)
 	{
 	    this -> trans.erase(trans.begin());
 	}
+	// store the score of copyBoard with the depth to the transposition table
 	this -> trans[hashValue] = tempScore;
+	*/
         // Opponent chooses the best step for him which minimizes our score.
         // store the min score
         if (tempScore < score)
@@ -288,9 +272,6 @@ int Player::min(Board * board, int depth, int a, int b)
  */
 int Player::max(Board * board, int depth, int a, int b)
 {
-    // int diskCount = this -> board -> countBlack() + this -> board -> countWhite();
-    // cerr << "In max, diskCount = " << diskCount << endl;
-    // cerr << "In max, depth = " << depth << endl;
     int score;
     int alpha = a;
     int beta = b;
@@ -316,14 +297,25 @@ int Player::max(Board * board, int depth, int a, int b)
         // simulate move on a copied board
         Board * copyBoard = board -> copy();
         copyBoard -> doMove(move3, side);
+	/*
+	// if the board with the depth has been calculated
 	long hashValue = zobristHash(copyBoard, depth);
 	if (this -> trans.find(hashValue) != this -> trans.end())
 	{
 	    return this -> trans[hashValue];
 	}
+	*/
         // get minimal score from opponent's move
         int tempScore = min(copyBoard, depth - 1, alpha, beta);
-            
+	/*
+        // if the transposition table exceeds size, erase the beginning one
+	if (this -> trans.size() >= 100000)
+	{
+	    this -> trans.erase(trans.begin());
+	}
+	// store the score of copyBoard with the depth to the transposition table
+	this -> trans[hashValue] = tempScore;
+	*/
         // Maximize our score based on the minimal scores
         if (tempScore > score)
         {
@@ -474,6 +466,7 @@ int Player::evaluateDisk(int i, int j)
  * @param depth The depth the node has explored.
  * @return The hash value.
  */
+/*
 long Player::zobristHash(Board * board, int depth)
 {
     srand(1);
@@ -508,3 +501,4 @@ long Player::zobristHash(Board * board, int depth)
     delete [] table;
     return hashValue;
 }
+*/

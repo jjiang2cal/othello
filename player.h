@@ -5,9 +5,9 @@
 #include "common.h"
 #include "board.h"
 #include <list>
-#include <stdlib.h>  /* rand, srand */
+// #include <stdlib.h>  /* rand, srand */
 #include <time.h>    /* clock_t, clock, CLOCKS_PER_SEC */
-#include <unordered_map>
+// #include <unordered_map>
 
 #define INFINITY     1000000;
 
@@ -19,7 +19,7 @@ private:
     Side side;
     Side opponentSide;
     Board * board;
-    unordered_map<long, int> trans;
+    // unordered_map<long, int> trans;
 
     list<Move *> getMoves(Board * board, Side side);
     int evaluateBoard(Board * board, Side side);
@@ -28,7 +28,7 @@ private:
     Move * minimax(int maxDepth);
     int min(Board * board, int depth, int alpha, int beta);
     int max(Board * board, int depth, int alpha, int beta);
-    long zobristHash(Board * board, int depth);
+    // long zobristHash(Board * board, int depth);
 
 public:
     Player(Side side);

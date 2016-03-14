@@ -12,5 +12,9 @@ Improvements:
 - Alpha beta pruning
     With alpha beta pruning, some subtrees with bad scores were cut off, which decreased the game states that minimax needed to search, and thus decreased the search time.
 
+Tried but abandoned:
 - Iterative deepening
-    With iterative deepening, the AI was able to search as deep as there was time left.
+    With iterative deepening, the AI could search as deep as there was time left. But my code consumed too much memory.
+
+- Transposition table
+    A transposition table could save the calculated nodes for quick lookup. I tried to hash a board with certain search depth, but there might be some collisions and it did not work well.
