@@ -388,11 +388,28 @@ int Player::evaluateBoard(Board * board, Side side)
     int oppoDisks = board -> count(oppoSide);
     int parity = myDisks - oppoDisks;
 
+    // get a score based on difference of mobilities
+    list <Move *> myMoves = this -> getMoves(board, side);
+    // list <Move *> oppoMoves = this -> getMoves(board, oppoSide);
+    // int mobility = 40 * (myMoves.size() - oppoMoves.size()) 
+    //     / (myMoves.size() + oppoMoves.size());
+    int mobility = 40 * myMoves.size();
+    list<Move *>::iterator it;
+    for (it = myMoves.begin(); it != myMoves.end(); it++)
+    {
+        delete *it;
+    }
+    /*
+    for (it = oppoMoves.begin(); it != oppoMoves.end(); it++)
+    {
+        delete *it;
+    }
+    */
     // use positional weights for early and middle stages
     // add disk difference in late stage
     if (myDisks + oppoDisks < 54)
     {
-        score = position;
+        score = position + mobility;
     }
     else
     {
