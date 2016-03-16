@@ -136,8 +136,8 @@ Move * Player::minimax(int maxDepth)
 {
     /* minimax */
     // get available moves
-    list<Move *> moves
-        = this -> getMoves(this -> board, this -> side);
+    list<Move *> moves;
+    this -> getMoves(this -> board, this -> side, &moves);
     if (moves.size() == 0)
         return NULL;
 
@@ -201,7 +201,8 @@ int Player::min(Board * board, int depth, int a, int b)
     int alpha = a;
     int beta = b;
     Side side = this -> opponentSide;  // opponent's turn
-    list<Move *> moves = this -> getMoves(board, side);
+    list<Move *> moves;
+    this -> getMoves(board, side, &moves);
     if (depth == 0 || moves.size() == 0)
     {
         score = this -> evaluateBoard(board, this -> side);
@@ -276,7 +277,8 @@ int Player::max(Board * board, int depth, int a, int b)
     int alpha = a;
     int beta = b;
     Side side = this -> side;   // our turn
-    list<Move *> moves = this -> getMoves(board, side);
+    list<Move *> moves;
+    this -> getMoves(board, side, &moves);
     if (depth == 0 || moves.size() == 0)
     {
         score = this -> evaluateBoard(board, this -> side);
@@ -341,11 +343,9 @@ int Player::max(Board * board, int depth, int a, int b)
  *
  * @param  board  this player's board
  *         side   this player's side
- * @return A list containing available moves.
  */
-list<Move *> Player::getMoves(Board * board, Side side)
+void Player::getMoves(Board * board, Side side, list<Move *> * moves)
 {
-    list<Move *> moves;
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
@@ -356,7 +356,7 @@ list<Move *> Player::getMoves(Board * board, Side side)
             // add the legal move to the list
             if (board -> checkMove(move, side))
             {
-                moves.push_back(move);
+                moves -> push_back(move);
             }
             else
 	    {
@@ -364,7 +364,7 @@ list<Move *> Player::getMoves(Board * board, Side side)
 	    }
         }
     }
-    return moves;
+    return;
 }
 
 /**
@@ -389,7 +389,8 @@ int Player::evaluateBoard(Board * board, Side side)
     int parity = myDisks - oppoDisks;
 
     // get a score based on difference of mobilities
-    list <Move *> myMoves = this -> getMoves(board, side);
+    list <Move *> myMoves;
+    this -> getMoves(board, side, &myMoves);
     // list <Move *> oppoMoves = this -> getMoves(board, oppoSide);
     // int mobility = 40 * (myMoves.size() - oppoMoves.size()) 
     //     / (myMoves.size() + oppoMoves.size());

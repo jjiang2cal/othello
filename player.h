@@ -21,7 +21,7 @@ private:
     Board * board;
     // unordered_map<long, int> trans;
 
-    list<Move *> getMoves(Board * board, Side side);
+    void getMoves(Board * board, Side side, list<Move *> * moves);
     int evaluateBoard(Board * board, Side side);
     int evaluatePosition(Board * board, Side side);
     int evaluateDisk(int i, int j);
